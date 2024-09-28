@@ -2,12 +2,17 @@
 #include <string.h>
 
 int main(int argc, char *argv[]) {
+  char buf[100] = {0};
+  size_t buf_size = sizeof(buf);
   for (int i = 1; i < argc; i++) {
-    printf("%s", argv[i]);
-    if (i != argc - 1) {
-      printf(" ");
+    int space = buf_size - strlen(buf) - 1;
+    strncat(buf, argv[i], space);
+
+    space = buf_size - strlen(buf) - 1;
+    if (i < argc - 1) {
+      strncat(buf, " ", space);
     }
   }
-  printf("\n");
+  printf("%s\n", buf);
   return 0;
 }
