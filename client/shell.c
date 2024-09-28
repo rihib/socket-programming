@@ -1,11 +1,46 @@
 #include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <sys/wait.h>
+#include <unistd.h>
 
 void shell() {
-  char buf[100];
+  char buf[100] = {0};
   while (1) {
-    printf("echo> ");
+    printf("shell> ");
     scanf("%99[^\n]", buf);
     getchar();
-    printf("%s\n", buf);
+
+    char cmd[100] = {0};
+    char arg_string[100] = {0};
+    unsigned long i = 0;
+    while (buf[i] != ' ' && buf[i] != '\0' && i < (sizeof(cmd) - 1)) {
+      cmd[i] = buf[i];
+      i++;
+    }
+    cmd[i] = '\0';
+    if (buf[i] == ' ') {
+      strncpy(arg_string, buf + i + 1, sizeof(arg_string) - 1);
+    }
+
+    __darwin_pid_t pid = fork();
+    if (pid == -1) {
+      perror("fork failed");
+      exit(1);
+    }
+    if (pid != 0) {
+      int status;
+      waitpid(pid, &status, 0);
+    }
+    if (pid == 0) {
+      if (strcmp(cmd, "echo") == 0) {
+        execl("client/cmd/bin/echo", "echo", arg_string, (char *)NULL);
+        perror("command execution failed");
+        exit(1);
+      } else {
+        perror("command not found");
+        exit(1);
+      }
+    }
   }
 }
