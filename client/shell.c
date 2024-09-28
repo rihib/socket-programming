@@ -5,8 +5,8 @@
 #include <unistd.h>
 
 void shell() {
-  char buf[100] = {0};
   while (1) {
+    char buf[100] = {0};
     printf("shell> ");
     scanf("%99[^\n]", buf);
     getchar();
@@ -36,11 +36,10 @@ void shell() {
       if (strcmp(cmd, "echo") == 0) {
         execl("client/cmd/bin/echo", "echo", arg_string, (char *)NULL);
         perror("command execution failed");
-        exit(1);
       } else {
-        perror("command not found");
-        exit(1);
+        fprintf(stderr, "command not found: %s\n", cmd);
       }
+      exit(1);
     }
   }
 }
