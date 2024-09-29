@@ -1,26 +1,31 @@
 #include <arpa/inet.h>
 #include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
 #include <sys/socket.h>
 #include <unistd.h>
-
-#define PORT 9000
 
 int send_reliably(int s, char *buf, int len);
 int receive_reliably(int s, char *buf, int len);
 
 int main(int argc, char *argv[]) {
-  char data[100] = {0};
-  size_t data_size = sizeof(data);
-  for (int i = 1; i < argc; i++) {
-    int space = data_size - strlen(data) - 1;
-    strncat(data, argv[i], space);
-
-    space = data_size - strlen(data) - 1;
-    if (i < argc - 1) {
-      strncat(data, " ", space);
-    }
+  if (argc != 2) {
+    fprintf(stderr, "Usage: %s <ipaddress>:<port>\n", argv[0]);
+    return -1;
   }
+  char *delimiter = strchr(argv[1], ':');
+  if (delimiter == NULL) {
+    fprintf(stderr, "Usage: %s <ipaddress>:<port>\n", argv[0]);
+    return -1;
+  }
+  *delimiter = '\0';
+  const char *ipaddr = argv[1];
+  int port = atoi(delimiter + 1);  // not care if atoi could conver it or not
+
+  // Create HTTP GET Request
+  char request[1024] = {0};
+  snprintf(request, sizeof(request),
+           "GET / HTTP/1.1\r\nHost: %s\r\nConnection: close\r\n\r\n", ipaddr);
 
   // Create Socket
   int s = socket(PF_INET, SOCK_STREAM, 0);
@@ -32,12 +37,12 @@ int main(int argc, char *argv[]) {
   // Configure Server Address & Port
   struct sockaddr_in addr;
   addr.sin_family = AF_INET;
-  if (inet_aton("127.0.0.1", &addr.sin_addr) == 0) {
+  if (inet_aton(ipaddr, &addr.sin_addr) == 0) {
     perror("invalid address");
     close(s);
     return -1;
   }
-  addr.sin_port = htons(PORT);
+  addr.sin_port = htons(port);
 
   // Connect to the Server
   if (connect(s, (struct sockaddr *)&addr, sizeof(addr)) == -1) {
@@ -46,23 +51,26 @@ int main(int argc, char *argv[]) {
     return -1;
   }
 
-  // Send
-  if (send_reliably(s, data, 100) == -1) {
+  // Send HTTP GET Request
+  if (send_reliably(s, request, strlen(request)) == -1) {
     perror("failed to send");
     close(s);
     return -1;
   }
 
-  // Receive
+  // Receive HTTP Response
   char buf[1024];
-  if (receive_reliably(s, buf, 100) == -1) {
+  int received = receive_reliably(s, buf, sizeof(buf));
+  if (received == -1) {
     perror("failed to receive");
     close(s);
     return -1;
   }
-  printf("%s\n", buf);
+  buf[received] = '\0';
+  printf("received:\n\n%s\n", buf);
 
   // Close
+  // FIXME: closeが失敗した場合を考慮すべきなのだろうか
   if (close(s) == -1) {
     perror("failed to close");
     return -1;
@@ -97,9 +105,12 @@ int receive_reliably(int s, char *buf, int len) {
     }
     if (n == 0) {
       fprintf(stderr, "EOF\n");
-      return received;
+      break;
     }
     received += n;
+    if (strstr(buf, "\r\n\r\n") != NULL) {
+      break;
+    }
   }
   return received;
 }

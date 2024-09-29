@@ -31,7 +31,11 @@ int main() {
     // Configure Address & Port
     struct sockaddr_in addr;
     addr.sin_family = AF_INET;
-    addr.sin_addr.s_addr = INADDR_ANY;
+    if (inet_aton("127.0.0.1", &addr.sin_addr) == 0) {
+      perror("invalid address");
+      close(ss);
+      return -1;
+    }
     addr.sin_port = htons(PORT);
 
     // Bind
@@ -62,13 +66,15 @@ int main() {
 
     // Receive
     char buf[1024];
-    if (receive_reliably(cs, buf, 100) == -1) {
+    int received = receive_reliably(cs, buf, sizeof(buf));
+    if (received == -1) {
       perror("receive faild");
       close(cs);
       close(ss);
       return -1;
     }
-    printf("received: %s\n", buf);
+    buf[received] = '\0';
+    printf("received:\n\n%s\n", buf);
 
     // Send
     char *hello = "Hello from server";
@@ -115,9 +121,12 @@ int receive_reliably(int s, char *buf, int len) {
     }
     if (n == 0) {
       fprintf(stderr, "EOF\n");
-      return received;
+      break;
     }
     received += n;
+    if (strstr(buf, "\r\n\r\n") != NULL) {
+      break;
+    }
   }
   return received;
 }

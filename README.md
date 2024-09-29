@@ -80,3 +80,21 @@ if (setsockopt(ss, SOL_SOCKET, SO_REUSEPORT, &opt, sizeof(opt)) == -1) {
 [分散にも便利 SO_REUSEPORT](https://chienomi.org/articles/linux/202212-reuseport.htmls)
 
 [NginxでのeBPFとSO_REUSEPORTを使ったQUICコネクション受信処理](https://medium.com/nttlabs/nginx-quic-ebpf-soreuseport-127c62112a8d)
+
+## `sin_addr`
+
+下記のようにするとサーバーが任意のネットワークインターフェース（すべての利用可能なインターフェース）からの接続を受け入れるという意味になる（具体的には、`0.0.0.0`というアドレスに解決される）。
+
+```c
+addr.sin_addr.s_addr = INADDR_ANY;
+```
+
+下記のようにすると、ローカルホスト（`127.0.0.1`）からの接続のみを受け入れるという意味になる。
+
+```c
+if (inet_aton("127.0.0.1", &addr.sin_addr) == 0) {
+  perror("invalid address");
+  close(ss);
+  return -1;
+}
+```
