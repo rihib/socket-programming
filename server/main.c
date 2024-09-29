@@ -6,8 +6,8 @@
 
 #define PORT 9000
 
-int send_reliably(int s, char *buf, int len);
-int receive_reliably(int s, char *buf, int len);
+int send_all(int s, char *buf, int len);
+int receive_all(int s, char *buf, int len);
 
 int main() {
   printf("server starting...\n");
@@ -66,7 +66,7 @@ int main() {
 
     // Receive
     char buf[1024];
-    int received = receive_reliably(cs, buf, sizeof(buf));
+    int received = receive_all(cs, buf, sizeof(buf));
     if (received == -1) {
       perror("receive faild");
       close(cs);
@@ -86,7 +86,7 @@ int main() {
         "\r\n\r\n";
 
     // Send HTTP Response
-    if (send_reliably(cs, response, strlen(response)) == -1) {
+    if (send_all(cs, response, strlen(response)) == -1) {
       perror("send failed");
       close(cs);
       close(ss);
@@ -102,7 +102,7 @@ int main() {
   return 0;
 }
 
-int send_reliably(int s, char *buf, int len) {
+int send_all(int s, char *buf, int len) {
   int sent = 0;
   while (sent < len) {
     int n = send(s, buf + sent, len - sent, 0);
@@ -119,7 +119,7 @@ int send_reliably(int s, char *buf, int len) {
   return sent;
 }
 
-int receive_reliably(int s, char *buf, int len) {
+int receive_all(int s, char *buf, int len) {
   int received = 0;
   while (received < len) {
     int n = recv(s, buf + received, len - received, 0);

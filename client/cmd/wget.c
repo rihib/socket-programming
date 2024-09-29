@@ -5,8 +5,8 @@
 #include <sys/socket.h>
 #include <unistd.h>
 
-int send_reliably(int s, char *buf, int len);
-int receive_reliably(int s, char *buf, int len);
+int send_all(int s, char *buf, int len);
+int receive_all(int s, char *buf, int len);
 
 int main(int argc, char *argv[]) {
   if (argc != 2) {
@@ -52,7 +52,7 @@ int main(int argc, char *argv[]) {
   }
 
   // Send HTTP GET Request
-  if (send_reliably(s, request, strlen(request)) == -1) {
+  if (send_all(s, request, strlen(request)) == -1) {
     perror("failed to send");
     close(s);
     return -1;
@@ -60,7 +60,7 @@ int main(int argc, char *argv[]) {
 
   // Receive HTTP Response
   char buf[1024];
-  int received = receive_reliably(s, buf, sizeof(buf));
+  int received = receive_all(s, buf, sizeof(buf));
   if (received == -1) {
     perror("failed to receive");
     close(s);
@@ -78,7 +78,7 @@ int main(int argc, char *argv[]) {
   return 0;
 }
 
-int send_reliably(int s, char *buf, int len) {
+int send_all(int s, char *buf, int len) {
   int sent = 0;
   while (sent < len) {
     int n = send(s, buf + sent, len - sent, 0);
@@ -95,7 +95,7 @@ int send_reliably(int s, char *buf, int len) {
   return sent;
 }
 
-int receive_reliably(int s, char *buf, int len) {
+int receive_all(int s, char *buf, int len) {
   int received = 0;
   while (received < len) {
     int n = recv(s, buf + received, len - received, 0);
