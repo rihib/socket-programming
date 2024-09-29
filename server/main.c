@@ -74,17 +74,25 @@ int main() {
       return -1;
     }
     buf[received] = '\0';
-    printf("received:\n\n%s\n", buf);
+    printf("\nreceived:\n%s\n", buf);
 
-    // Send
-    char *hello = "Hello from server";
-    if (send_reliably(cs, hello, strlen(hello)) == -1) {
+    // Create HTTP Response
+    char *response =
+        "HTTP/1.1 200 OK\r\n"
+        "Content-Type: text/html\r\n"
+        "Connection: close\r\n"
+        "\r\n"
+        "<html><body><h1>Hello from server</h1></body></html>"
+        "\r\n\r\n";
+
+    // Send HTTP Response
+    if (send_reliably(cs, response, strlen(response)) == -1) {
       perror("send failed");
       close(cs);
       close(ss);
       return -1;
     }
-    printf("sent: hello\n");
+    printf("sent http reponse\n");
 
     // Close
     close(cs);

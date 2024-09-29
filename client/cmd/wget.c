@@ -67,7 +67,7 @@ int main(int argc, char *argv[]) {
     return -1;
   }
   buf[received] = '\0';
-  printf("received:\n\n%s\n", buf);
+  printf("\n%s\n", buf);
 
   // Close
   // FIXME: closeが失敗した場合を考慮すべきなのだろうか
