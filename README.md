@@ -34,7 +34,7 @@
 int main() {
   char input;
   while (1) {
-    printf("echo> ");
+    printf("shell> ");
     scanf("%c", &input);
     printf("%c\n", input);
   }
@@ -42,13 +42,41 @@ int main() {
 ```
 
 ```sh
-echo> a
+shell> a
 a
-echo> 
+shell> 
 
-echo> 
+shell> 
 ```
 
 [[迷信] scanfではバッファオーバーランを防げない](https://www.kijineko.co.jp/迷信-scanfではバッファオーバーランを防げない/)
 
 [C言語の標準入力関数をまとめてみた　～①scanf,getchar,gets～](https://ameblo.jp/koshi-8-ginchaku/entry-12252499746.html)
+
+## `htons`
+
+"Host TO Network Short" の略で、16ビットの整数（short型）をホストバイトオーダー（通常はリトルエンディアン）をネットワークバイトオーダー（ビッグエンディアン）に変換するための関数である。`htons(PORT)`はポート番号をネットワークバイトオーダーに変換する。
+
+## Socketオプション
+
+Closeしたポートは、`TIME_WAIT`状態になり、数分間そのポートを再利用することができない。すぐに再利用してしまうと、以前のコネクションの時に送られてきたパケットが新しいコネクションに届いて、混入する可能性があるためである。そのため、`TIME_WAIT`状態のポートにソケットをバインドしようとすると`Address already in use`というエラーが発生する。
+
+`setsockopt`でソケットオプションを設定することができる。ソケットオプションは、ソケットの動作を制御するためのパラメータである。`setsockopt`の第2引数にはオプションのレベルを指定する。`SOL_SOCKET`はソケットレベルのオプションで、`IPPROTO_TCP`はTCPレベルのオプションである。第3引数にはオプション名を指定する。`SO_REUSEADDR`を設定するとソケットを`TIME_WAIT`状態のポートにバインドできるようになる。第4引数にはオプションの値を指定する。第5引数にはオプションの値のサイズを指定する。
+
+ちなみに`SO_REUSEPORT`を設定すると、同じポート番号に複数のソケットをバインドできるようになる。例えば複数のサーバープロセスが同一ポートで待ち受けることで分散処理などが可能になる。
+
+```c
+// Socket Option
+int opt = 1;
+if (setsockopt(ss, SOL_SOCKET, SO_REUSEPORT, &opt, sizeof(opt)) == -1) {
+  perror("setsockopt SO_REUSEPORT failed");
+  close(ss);
+  return 1;
+}
+```
+
+[ソケットプログラミング - 東京大学](https://i1i2i3.eidos.ic.i.u-tokyo.ac.jp/slides/socket.pdf)
+
+[分散にも便利 SO_REUSEPORT](https://chienomi.org/articles/linux/202212-reuseport.htmls)
+
+[NginxでのeBPFとSO_REUSEPORTを使ったQUICコネクション受信処理](https://medium.com/nttlabs/nginx-quic-ebpf-soreuseport-127c62112a8d)

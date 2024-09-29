@@ -33,8 +33,8 @@ void shell() {
       waitpid(pid, &status, 0);
     }
     if (pid == 0) {
-      if (strcmp(cmd, "echo") == 0) {
-        execl("client/cmd/bin/echo", "echo", arg, (char *)NULL);
+      if (strcmp(cmd, "wget") == 0) {
+        execl("client/cmd/bin/wget", "wget", arg, (char *)NULL);
         perror("command execution failed");
       } else {
         fprintf(stderr, "command not found: %s\n", cmd);

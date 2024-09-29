@@ -3,7 +3,7 @@ CFLAGS = -Wall -Werror -Wextra
 
 CLIENT = client
 CLIENTSRCS = $(wildcard $(CLIENT)/*.c)
-CLIENTBIN = $(CLIENT)/$(CLIENT).out
+CLIENTBIN = $(CLIENT)/shell.out
 
 CMD = cmd
 CMDSRCS = $(wildcard $(CLIENT)/$(CMD)/*.c)
