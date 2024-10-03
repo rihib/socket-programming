@@ -1,3 +1,3 @@
-void shell();
+#include "shell.h"
 
 int main(void) { shell(); }

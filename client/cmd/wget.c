@@ -1,3 +1,5 @@
+#include "wget.h"
+
 #include <arpa/inet.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -5,7 +7,6 @@
 #include <sys/socket.h>
 #include <unistd.h>
 
-void show_usage_and_exit(char *program_name);
 int send_all(int s, char *buf, int len);
 int receive_all(int s, char *buf, int len);
 
