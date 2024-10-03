@@ -5,18 +5,17 @@
 #include <sys/socket.h>
 #include <unistd.h>
 
+void show_usage_and_exit(char *program_name);
 int send_all(int s, char *buf, int len);
 int receive_all(int s, char *buf, int len);
 
 int main(int argc, char *argv[]) {
   if (argc != 2) {
-    fprintf(stderr, "Usage: %s <ipaddress>:<port>\n", argv[0]);
-    return -1;
+    show_usage_and_exit(argv[0]);
   }
   char *delimiter = strchr(argv[1], ':');
   if (delimiter == NULL) {
-    fprintf(stderr, "Usage: %s <ipaddress>:<port>\n", argv[0]);
-    return -1;
+    show_usage_and_exit(argv[0]);
   }
   *delimiter = '\0';
   const char *ipaddr = argv[1];
@@ -113,4 +112,9 @@ int receive_all(int s, char *buf, int len) {
     }
   }
   return received;
+}
+
+void show_usage_and_exit(char *program_name) {
+  fprintf(stderr, "Usage: %s <ipaddress>:<port>\n", program_name);
+  exit(1);
 }
