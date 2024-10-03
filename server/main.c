@@ -4,10 +4,9 @@
 #include <string.h>
 #include <unistd.h>
 
-#define PORT 9000
+#include "send_and_receive.h"
 
-int send_all(int s, char *buf, int len);
-int receive_all(int s, char *buf, int len);
+#define PORT 9000
 
 int main() {
   printf("server starting...\n");

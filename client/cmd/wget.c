@@ -7,8 +7,7 @@
 #include <sys/socket.h>
 #include <unistd.h>
 
-int send_all(int s, char *buf, int len);
-int receive_all(int s, char *buf, int len);
+#include "send_and_receive.h"
 
 int main(int argc, char *argv[]) {
   if (argc != 2) {

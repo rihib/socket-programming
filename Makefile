@@ -1,5 +1,5 @@
 CC = clang
-CFLAGS = -Wall -Werror -Wextra
+CFLAGS = -Wall -Werror -Wextra -Icommon
 
 CLIENT = client
 CLIENTSRCS = $(wildcard $(CLIENT)/*.c)
