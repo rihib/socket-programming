@@ -23,7 +23,7 @@ void shell() {
       strncpy(arg, buf + i + 1, sizeof(arg) - 1);
     }
 
-    __darwin_pid_t pid = fork();
+    pid_t pid = fork();
     if (pid == -1) {
       perror("fork failed");
       exit(1);
