@@ -60,7 +60,7 @@ int main(int argc, char *argv[]) {
 
   // Receive HTTP Response
   char buf[1024];
-  int received = receive_all(s, buf, sizeof(buf));
+  int received = receive_all(s, buf, sizeof(buf) - 1);
   if (received == -1) {
     perror("failed to receive");
     close(s);

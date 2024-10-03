@@ -65,7 +65,7 @@ int main() {
 
     // Receive
     char buf[1024];
-    int received = receive_all(cs, buf, sizeof(buf));
+    int received = receive_all(cs, buf, sizeof(buf) - 1);
     if (received == -1) {
       perror("receive faild");
       close(cs);
@@ -93,10 +93,12 @@ int main() {
     }
     printf("sent http reponse\n");
 
-    // Close
+    // Close client socket
     close(cs);
-    close(ss);
-    printf("close success\n");
+    printf("client connection closed\n");
   }
+  // Close server socket
+  close(ss);
+  printf("server socket closed\n");
   return 0;
 }
