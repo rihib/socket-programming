@@ -26,20 +26,18 @@ void shell() {
     pid_t pid = fork();
     if (pid == -1) {
       perror("fork failed");
-      exit(1);
     }
     if (pid != 0) {
       int status;
       waitpid(pid, &status, 0);
-    }
-    if (pid == 0) {
+    } else {
       if (strcmp(cmd, "wget") == 0) {
         execl("client/cmd/bin/wget", "wget", arg, (char *)NULL);
         perror("command execution failed");
       } else {
         fprintf(stderr, "command not found: %s\n", cmd);
       }
-      exit(1);
+      exit(EXIT_FAILURE);
     }
   }
 }

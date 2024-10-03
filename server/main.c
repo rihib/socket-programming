@@ -16,7 +16,7 @@ int main() {
     int ss = socket(PF_INET, SOCK_STREAM, 0);
     if (ss == -1) {
       perror("failed to create socket");
-      return -1;
+      return EXIT_FAILURE;
     }
     printf("create server socket\n");
 
@@ -25,7 +25,7 @@ int main() {
     if (setsockopt(ss, SOL_SOCKET, SO_REUSEADDR, &opt, sizeof(opt)) == -1) {
       perror("setsockopt SO_REUSEADDR failed");
       close(ss);
-      return 1;
+      return EXIT_FAILURE;
     }
 
     // Configure Address & Port
@@ -34,7 +34,7 @@ int main() {
     if (inet_aton("127.0.0.1", &addr.sin_addr) == 0) {
       perror("invalid address");
       close(ss);
-      return -1;
+      return EXIT_FAILURE;
     }
     addr.sin_port = htons(PORT);
 
@@ -42,7 +42,7 @@ int main() {
     if (bind(ss, (struct sockaddr *)&addr, sizeof(addr)) == -1) {
       perror("bind failed");
       close(ss);
-      return 1;
+      return EXIT_FAILURE;
     }
     printf("bind success\n");
 
@@ -50,7 +50,7 @@ int main() {
     if (listen(ss, 10) == -1) {
       perror("listen failed");
       close(ss);
-      return 1;
+      return EXIT_FAILURE;
     }
     printf("listen success\n");
 
@@ -60,7 +60,7 @@ int main() {
     if (cs == -1) {
       perror("accept failed");
       close(ss);
-      return -1;
+      return EXIT_FAILURE;
     }
     printf("accept success\n");
 
@@ -71,7 +71,7 @@ int main() {
       perror("receive faild");
       close(cs);
       close(ss);
-      return -1;
+      return EXIT_FAILURE;
     }
     buf[received] = '\0';
     printf("\nreceived:\n%s\n", buf);
@@ -90,7 +90,7 @@ int main() {
       perror("send failed");
       close(cs);
       close(ss);
-      return -1;
+      return EXIT_FAILURE;
     }
     printf("sent http reponse\n");
 
@@ -108,7 +108,7 @@ int send_all(int s, char *buf, int len) {
     int n = send(s, buf + sent, len - sent, 0);
     if (n == -1) {
       perror("failed to send");
-      return -1;
+      return EXIT_FAILURE;
     }
     if (n == 0) {
       fprintf(stderr, "EOF\n");
@@ -125,7 +125,7 @@ int receive_all(int s, char *buf, int len) {
     int n = recv(s, buf + received, len - received, 0);
     if (n == -1) {
       perror("failed to receive");
-      return -1;
+      return EXIT_FAILURE;
     }
     if (n == 0) {
       fprintf(stderr, "EOF\n");

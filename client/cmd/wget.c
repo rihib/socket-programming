@@ -31,7 +31,7 @@ int main(int argc, char *argv[]) {
   int s = socket(PF_INET, SOCK_STREAM, 0);
   if (s == -1) {
     perror("failed to create socket");
-    return -1;
+    return EXIT_FAILURE;
   }
 
   // Configure Server Address & Port
@@ -40,7 +40,7 @@ int main(int argc, char *argv[]) {
   if (inet_aton(ipaddr, &addr.sin_addr) == 0) {
     perror("invalid address");
     close(s);
-    return -1;
+    return EXIT_FAILURE;
   }
   addr.sin_port = htons(port);
 
@@ -48,14 +48,14 @@ int main(int argc, char *argv[]) {
   if (connect(s, (struct sockaddr *)&addr, sizeof(addr)) == -1) {
     perror("failed to connect");
     close(s);
-    return -1;
+    return EXIT_FAILURE;
   }
 
   // Send HTTP GET Request
   if (send_all(s, request, strlen(request)) == -1) {
     perror("failed to send");
     close(s);
-    return -1;
+    return EXIT_FAILURE;
   }
 
   // Receive HTTP Response
@@ -64,7 +64,7 @@ int main(int argc, char *argv[]) {
   if (received == -1) {
     perror("failed to receive");
     close(s);
-    return -1;
+    return EXIT_FAILURE;
   }
   buf[received] = '\0';
   printf("\n%s\n", buf);
@@ -73,7 +73,7 @@ int main(int argc, char *argv[]) {
   // FIXME: closeが失敗した場合を考慮すべきなのだろうか
   if (close(s) == -1) {
     perror("failed to close");
-    return -1;
+    return EXIT_FAILURE;
   }
   return 0;
 }
@@ -84,7 +84,7 @@ int send_all(int s, char *buf, int len) {
     int n = send(s, buf + sent, len - sent, 0);
     if (n == -1) {
       perror("failed to send");
-      return -1;
+      return EXIT_FAILURE;
     }
     if (n == 0) {
       fprintf(stderr, "EOF\n");
@@ -101,7 +101,7 @@ int receive_all(int s, char *buf, int len) {
     int n = recv(s, buf + received, len - received, 0);
     if (n == -1) {
       perror("failed to receive");
-      return -1;
+      return EXIT_FAILURE;
     }
     if (n == 0) {
       fprintf(stderr, "EOF\n");
@@ -117,5 +117,5 @@ int receive_all(int s, char *buf, int len) {
 
 void show_usage_and_exit(char *program_name) {
   fprintf(stderr, "Usage: %s <ipaddress>:<port>\n", program_name);
-  exit(1);
+  exit(EXIT_FAILURE);
 }
