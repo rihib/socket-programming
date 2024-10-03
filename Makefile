@@ -13,16 +13,19 @@ SERVER = server
 SERVERSRCS = $(wildcard $(SERVER)/*.c)
 SERVERBIN = $(SERVER)/$(SERVER).out
 
+COMMON = common
+COMMONSRCS = $(wildcard $(COMMON)/*.c)
+
 all: $(CLIENTBIN) $(SERVERBIN)
 
-$(CLIENTBIN): $(CLIENTSRCS) $(CMDBIN)
-	@$(CC) $(CFLAGS) $(CLIENTSRCS) -o $@
+$(CLIENTBIN): $(CLIENTSRCS) $(CMDBIN) $(COMMONSRCS)
+	@$(CC) $(CFLAGS) $(CLIENTSRCS) $(COMMONSRCS) -o $@
 
 $(CLIENT)/$(CMD)/bin/%: $(CLIENT)/$(CMD)/%.c
 	@mkdir -p $(CLIENT)/$(CMD)/bin
-	@$(CC) $(CFLAGS) $< -o $@
+	@$(CC) $(CFLAGS) $< $(COMMONSRCS) -o $@
 
-$(SERVERBIN): $(SERVERSRCS)
+$(SERVERBIN): $(SERVERSRCS) $(COMMONSRCS)
 	@$(CC) $(CFLAGS) $^ -o $@
 
 clean:

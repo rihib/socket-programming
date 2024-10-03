@@ -78,43 +78,6 @@ int main(int argc, char *argv[]) {
   return 0;
 }
 
-int send_all(int s, char *buf, int len) {
-  int sent = 0;
-  while (sent < len) {
-    int n = send(s, buf + sent, len - sent, 0);
-    if (n == -1) {
-      perror("failed to send");
-      return EXIT_FAILURE;
-    }
-    if (n == 0) {
-      fprintf(stderr, "EOF\n");
-      return sent;
-    }
-    sent += n;
-  }
-  return sent;
-}
-
-int receive_all(int s, char *buf, int len) {
-  int received = 0;
-  while (received < len) {
-    int n = recv(s, buf + received, len - received, 0);
-    if (n == -1) {
-      perror("failed to receive");
-      return EXIT_FAILURE;
-    }
-    if (n == 0) {
-      fprintf(stderr, "EOF\n");
-      break;
-    }
-    received += n;
-    if (strstr(buf, "\r\n\r\n") != NULL) {
-      break;
-    }
-  }
-  return received;
-}
-
 void show_usage_and_exit(char *program_name) {
   fprintf(stderr, "Usage: %s <ipaddress>:<port>\n", program_name);
   exit(EXIT_FAILURE);
