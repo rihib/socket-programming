@@ -11,49 +11,48 @@ int receive_all(int s, char *buf, int len);
 
 int main() {
   printf("server starting...\n");
+
+  // Create Socket
+  int ss = socket(PF_INET, SOCK_STREAM, 0);
+  if (ss == -1) {
+    perror("failed to create socket");
+    return EXIT_FAILURE;
+  }
+
+  // Socket Option
+  int opt = 1;
+  if (setsockopt(ss, SOL_SOCKET, SO_REUSEADDR, &opt, sizeof(opt)) == -1) {
+    perror("setsockopt SO_REUSEADDR failed");
+    close(ss);
+    return EXIT_FAILURE;
+  }
+
+  // Configure Address & Port
+  struct sockaddr_in addr;
+  addr.sin_family = AF_INET;
+  if (inet_aton("127.0.0.1", &addr.sin_addr) == 0) {
+    perror("invalid address");
+    close(ss);
+    return EXIT_FAILURE;
+  }
+  addr.sin_port = htons(PORT);
+
+  // Bind
+  if (bind(ss, (struct sockaddr *)&addr, sizeof(addr)) == -1) {
+    perror("bind failed");
+    close(ss);
+    return EXIT_FAILURE;
+  }
+
+  // Listen
+  if (listen(ss, 10) == -1) {
+    perror("listen failed");
+    close(ss);
+    return EXIT_FAILURE;
+  }
+  printf("listening on port %d\n", PORT);
+
   while (1) {
-    // Create Socket
-    int ss = socket(PF_INET, SOCK_STREAM, 0);
-    if (ss == -1) {
-      perror("failed to create socket");
-      return EXIT_FAILURE;
-    }
-    printf("create server socket\n");
-
-    // Socket Option
-    int opt = 1;
-    if (setsockopt(ss, SOL_SOCKET, SO_REUSEADDR, &opt, sizeof(opt)) == -1) {
-      perror("setsockopt SO_REUSEADDR failed");
-      close(ss);
-      return EXIT_FAILURE;
-    }
-
-    // Configure Address & Port
-    struct sockaddr_in addr;
-    addr.sin_family = AF_INET;
-    if (inet_aton("127.0.0.1", &addr.sin_addr) == 0) {
-      perror("invalid address");
-      close(ss);
-      return EXIT_FAILURE;
-    }
-    addr.sin_port = htons(PORT);
-
-    // Bind
-    if (bind(ss, (struct sockaddr *)&addr, sizeof(addr)) == -1) {
-      perror("bind failed");
-      close(ss);
-      return EXIT_FAILURE;
-    }
-    printf("bind success\n");
-
-    // Listen
-    if (listen(ss, 10) == -1) {
-      perror("listen failed");
-      close(ss);
-      return EXIT_FAILURE;
-    }
-    printf("listen success\n");
-
     // Accept
     socklen_t len = sizeof(addr);
     int cs = accept(ss, (struct sockaddr *)&addr, &len);
