@@ -12,6 +12,7 @@
 
 int main() {
   printf("server starting...\n");
+  const char *cause = NULL;
 
   // See `man getaddrinfo` Examples
   struct addrinfo hints, *infos;
@@ -25,38 +26,35 @@ int main() {
   }
   int sockets[MAXSOCK];
   int nsock = 0;
-  const char *cause = NULL;
+  int ss;
   for (struct addrinfo *info = infos; info && nsock < MAXSOCK;
        info = info->ai_next) {
     // Create socket
     sockets[nsock] =
         socket(info->ai_family, info->ai_socktype, info->ai_protocol);
-    if (sockets[nsock] == -1) {
+    ss = sockets[nsock];
+    if (ss == -1) {
       cause = "failed to create socket";
-      continue;
+      break;
     }
 
     // Socket Option
     int opt = 1;
-    if (setsockopt(sockets[nsock], SOL_SOCKET, SO_REUSEADDR, &opt,
-                   sizeof(opt)) == -1) {
+    if (setsockopt(ss, SOL_SOCKET, SO_REUSEADDR, &opt, sizeof(opt)) == -1) {
       cause = "setsockopt SO_REUSEADDR failed";
-      close(sockets[nsock]);
-      continue;
+      goto cleanup;
     }
 
     // Bind
-    if (bind(sockets[nsock], info->ai_addr, info->ai_addrlen) == -1) {
+    if (bind(ss, info->ai_addr, info->ai_addrlen) == -1) {
       cause = "bind failed";
-      close(sockets[nsock]);
-      continue;
+      goto cleanup;
     }
 
     // Listen
-    if (listen(sockets[nsock], 5) == -1) {
+    if (listen(ss, 5) == -1) {
       cause = "listen failed";
-      close(sockets[nsock]);
-      continue;
+      goto cleanup;
     }
 
     nsock++;
@@ -65,7 +63,6 @@ int main() {
     err(EXIT_FAILURE, "%s", cause);
   }
   freeaddrinfo(infos);
-  int ss = sockets[0];
   printf("listening on port 80\n");
 
   while (1) {
@@ -94,10 +91,14 @@ int main() {
     }
     pthread_detach(thread);
   }
-  // Close server socket
-  close(ss);
-  printf("server socket closed\n");
-  return 0;
+
+// この部分が実行されるのはエラーが起きた場合のみ
+// （シグナルを使っていないので、Ctrl+Cでループの実行を中断したらこの部分は実行されないため）
+cleanup:
+  if (close(ss) == -1) {
+    err(EXIT_FAILURE, "failed to close");
+  }
+  err(EXIT_FAILURE, "server socket closed: cause=%s", cause);
 }
 
 void *handle_request(void *arg) {
@@ -108,8 +109,8 @@ void *handle_request(void *arg) {
   char buf[1024];
   int received = receive_all(cs, buf, sizeof(buf) - 1);
   if (received == -1) {
-    close(cs);
-    pthread_exit(NULL);
+    perror("recv failed");
+    goto cleanup;
   }
   buf[received] = '\0';
   printf("\nreceived:\n%s\n", buf);
@@ -125,14 +126,13 @@ void *handle_request(void *arg) {
 
   // Send HTTP Response
   if (send_all(cs, response, strlen(response)) == -1) {
-    close(cs);
-    pthread_exit(NULL);
+    perror("send failed");
+    goto cleanup;
   }
   printf("sent http reponse\n");
 
-  // Close client socket
+cleanup:
   close(cs);
   printf("client connection closed\n");
-
   pthread_exit(NULL);
 }

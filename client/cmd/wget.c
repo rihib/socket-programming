@@ -87,7 +87,7 @@ int main(int argc, char *argv[]) {
 
 cleanup:
   if (close(s) == -1) {
-    err(EXIT_FAILURE, "failed to close, cause=%s", cause);
+    err(EXIT_FAILURE, "failed to close");
   }
   if (error) {
     err(EXIT_FAILURE, "%s", cause);
