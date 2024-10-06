@@ -52,7 +52,7 @@ int main() {
     }
 
     // Listen
-    if (listen(ss, 5) == -1) {
+    if (listen(ss, BACKLOG) == -1) {
       cause = "listen failed";
       goto cleanup;
     }

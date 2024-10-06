@@ -60,7 +60,7 @@ int main(int argc, char *argv[]) {
   snprintf(request, sizeof(request),
            "GET / HTTP/1.1\r\nHost: %s\r\nConnection: close\r\n\r\n", hostname);
   if (send_all(s, request, strlen(request)) == -1) {
-    error = 1;
+    error = EXIT_FAILURE;
     cause = "failed to send";
     goto cleanup;
   }
@@ -69,7 +69,7 @@ int main(int argc, char *argv[]) {
   char buf[1024];
   int received = receive_all(s, buf, sizeof(buf) - 1);
   if (received == -1) {
-    error = 1;
+    error = EXIT_FAILURE;
     cause = "failed to receive";
     goto cleanup;
   }
