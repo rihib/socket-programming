@@ -22,7 +22,7 @@ make
 サーバーの起動：
 
 ```bash
-$ server/server.out
+$ make runs
 server starting...
 listening on port 9000
 ```
@@ -30,7 +30,7 @@ listening on port 9000
 シェル（クライアント）の起動：
 
 ```bash
-$ client/shell.out
+$ make runc
 shell> 
 ```
 
@@ -56,27 +56,22 @@ shell>
 また外部のサイトに対してもリクエストを送ることができる（HTTPのみ、パス指定は未対応）。
 
 ```bash
-shell> wget 93.184.215.14:80
+shell> wget www.google.com:80
 
-HTTP/1.1 404 Not Found
-Content-Type: text/html
-Date: Sun, 29 Sep 2024 09:51:53 GMT
-Server: ECAcc (lac/55D2)
-Content-Length: 345
-Connection: close
-
-<?xml version="1.0" encoding="iso-8859-1"?>
-<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
-         "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
-<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
-        <head>
-                <title>404 - Not Found</title>
-        </head>
-        <body>
-                <h1>404 - Not Found</h1>
-        </body>
-</html>
-
+HTTP/1.1 200 OK
+Date: Sun, 06 Oct 2024 02:21:04 GMT
+Expires: -1
+Cache-Control: private, max-age=0
+Content-Type: text/html; charset=ISO-8859-1
+Content-Security-Policy-Report-Only: object-src 'none';base-uri 'self';script-src 'nonce-mr7B4KIQsSwcXXXV1Gah2g' 'strict-dynamic' 'report-sample' 'unsafe-eval' 'unsafe-inline' https: http:;report-uri https://csp.withgoogle.com/csp/gws/other-hp
+P3P: CP="This is not a P3P policy! See g.co/p3phelp for more info."
+Server: gws
+X-XSS-Protection: 0
+X-Frame-Options: SAMEORIGIN
+Set-Cookie: AEC=AVYB7cq_JHauoM0q54kqbna0Wrh-aUGFlF836-FR4vNjr3aM_w3KuGuh0Q; expires=Fri, 04-Apr-2025 02:21:04 GMT; path=/; domain=.google.com; Secure; HttpOnly; SameSite=lax
+Set-Cookie: NID=518=N_c6eKUvVmzd7pPQJfOIFZ8qVSZSFPFJArlfaRaD9x-VZ_YLZcBpAGfgiAHZS43q4A_E2fsUwuO3RsX5GvJ3tcTmxK0nJ87DOev7vOQecCHZBQMeDUt9VgqbdsQFq2Bzii0369USTf8YVRSxtMqUWSQ0_E48zJW9l1W3vOxNvNgs2CygFkm_tqAkV_I9kERx3DQ; expires=Mon, 07-Apr-2025 02:21:04 GMT; path=/; domain=.google.com; HttpOnly
+Accept-Ranges: none
+Vary: Acc
 shell> 
 ```
 
