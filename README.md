@@ -24,7 +24,7 @@ make
 ```bash
 $ make runs
 server starting...
-listening on port 9000
+listening on port 80
 ```
 
 シェル（クライアント）の起動：
@@ -41,7 +41,7 @@ shell>
 サーバーとシェルを起動した後、シェルで下記のように実行するとサーバーにGETリクエストを送ることができる。
 
 ```bash
-shell> wget 127.0.0.1:9000
+shell> wget localhost:80
 
 HTTP/1.1 200 OK
 Content-Type: text/html

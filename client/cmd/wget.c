@@ -15,27 +15,18 @@ int main(int argc, char *argv[]) {
   int error;
   const char *cause = NULL;
 
-  // Get hostname & port
+  // Get hostname
   if (argc != 2) {
-    error = 1;
+    errx(EXIT_FAILURE, "Usage: %s <hostname>", argv[0]);
   }
-  char *delimiter = strchr(argv[1], ':');
-  if (delimiter == NULL) {
-    error = 1;
-  }
-  if (error) {
-    errx(EXIT_FAILURE, "Usage: %s <hostname>:<port>", argv[0]);
-  }
-  *delimiter = '\0';
   const char *hostname = argv[1];
-  const char *port = delimiter + 1;
 
   // See `man getaddrinfo` Examples
   struct addrinfo hints, *infos;
   memset(&hints, 0, sizeof(hints));
   hints.ai_family = PF_UNSPEC;
   hints.ai_socktype = SOCK_STREAM;
-  error = getaddrinfo(hostname, port, &hints, &infos);
+  error = getaddrinfo(hostname, "http", &hints, &infos);
   if (error) {
     errx(EXIT_FAILURE, "%s", gai_strerror(error));
   }
