@@ -13,6 +13,7 @@
 
 int main(int argc, char *argv[]) {
   int error;
+  const char *cause = NULL;
 
   // Get hostname & port
   if (argc != 2) {
@@ -39,7 +40,6 @@ int main(int argc, char *argv[]) {
     errx(EXIT_FAILURE, "%s", gai_strerror(error));
   }
   int s = -1;
-  const char *cause = NULL;
   for (struct addrinfo *info = infos; info; info = info->ai_next) {
     s = socket(info->ai_family, info->ai_socktype, info->ai_protocol);
     if (s == -1) {
@@ -64,23 +64,28 @@ int main(int argc, char *argv[]) {
   snprintf(request, sizeof(request),
            "GET / HTTP/1.1\r\nHost: %s\r\nConnection: close\r\n\r\n", hostname);
   if (send_all(s, request, strlen(request)) == -1) {
-    close(s);
-    err(EXIT_FAILURE, "failed to send");
+    error = 1;
+    cause = "failed to send";
+    goto cleanup;
   }
 
   // Receive HTTP Response
   char buf[1024];
   int received = receive_all(s, buf, sizeof(buf) - 1);
   if (received == -1) {
-    close(s);
-    err(EXIT_FAILURE, "failed to receive");
+    error = 1;
+    cause = "failed to receive";
+    goto cleanup;
   }
   buf[received] = '\0';
   printf("\n%s\n", buf);
 
-  // Close
+cleanup:
   if (close(s) == -1) {
     err(EXIT_FAILURE, "failed to close");
+  }
+  if (error) {
+    err(EXIT_FAILURE, "%s", cause);
   }
   return 0;
 }
