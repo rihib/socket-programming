@@ -1,104 +1,85 @@
-# socket-programming
+# ソケットプログラミング
 
-- [x] C言語でソケットプログラミングを行う
-- [x] サーバーはクライアントからデータを受け取ったら何かしらのデータをクライアントに返す
-- [x] クライアント・サーバー間はTCPで通信する
-- [x] 使うシステムコールはsocket, bind, listen, accept, read, writeなど
-- [x] エラーが起きた時の処理は必ず書くこと
-- [x] GitHubにコミット（PRとか）
-- 余裕があれば
-  - [ ] スレッドを使ってデータのやり取りが多くなるように高速化を行う
-  - [ ] サーバーが特定のシグナルを受け取ったら停止するようにする
+## 概要
 
-## ポインタ
+C言語でソケットプログラミングを行った。クライアント・サーバー間はTCPで通信している。シェル、`wget`コマンド、HTTPサーバーを実装しており、簡単にだが、HTTPを喋ることができる。
 
-![ポインタ](images/pointer.png)
+### Future Work
 
-## 改行コード
+- [ ] スレッドを使ってデータのやり取りが多くなるように高速化を行う
+- [ ] サーバーが特定のシグナルを受け取ったら停止するようにする
 
-下記のようにOSによって改行コードは異なるが、C言語の標準ライブラリではファイルを開くときにテキストモードとバイナリモードを指定することができ、テキストモードの場合は改行コードを`\n`に自動的に置換するのに対し、バイナリモードの場合はファイルの内容を一切変更せずにそのまま読み書きする。例えば`FILE *file = fopen("example.txt", "r");`とするとテキストモードでファイルを開き、`FILE *file = fopen("example.txt", "rb");`とするとバイナリモードでファイルを開く。標準入出力の場合はテキストモードしか使用することができない。そのため、`scanf`や`printf`を使うときは、テキストモードになる。
+## 環境構築
 
-| OS | 名称 | エスケープ表記 |
-| --- | --- | --- |
-| Windows | CRLF | `\r\n` |
-| Unix (Linux, macOS, FreeBSD) | LF | `\n` |
-| 昔のMac | CR | `\r` |
+コンパイル：
 
-## `scanf`
-
-ユーザーが標準入力すると、入力バッファにデータが一旦格納される。`scanf`はこの入力バッファからデータを読み取り、変数に格納する。`scanf`は特に指定がなければ、入力バッファからデータを全て読み取るため、格納先の変数の容量以上のデータを入力すると、バッファオーバーフローが発生する。それを避けるためには、フォーマット指定子に最大文字数を指定する必要がある。例えば、`input[100]`としたとき、終端文字を除いて最大99文字まで読み取る場合は、`scanf("%99s", input);`とする。
-
-`scanf`でよく使われる`%s`や`%d`というフォーマット指定子は、空白文字（空白、タブ、改行など）を区切りとしてデータを読み取る。なので例えばユーザーが`Alice 25`と入力した場合、`scanf("%s %d", name, &age);`で読み取ると、`name`には1が、`age`には25が格納される。そのため、例えば`%[^\n]`のようにして正規表現のように指定することで、空白文字を区切りとせずにデータを読み取ることができる。`%[^\n]`は改行文字以外の全ての文字を読み取るという意味である。そのため、例えば`Hello World\n`と入力すると、空白文字を含む`Hello World`が変数に格納される。
-
-ユーザーは標準入力の最後にエンターキーを押すため、改行文字も入力バッファに入るが、`scanf`でよく使われる`%s`や`%d`というフォーマット指定子は、前述したように空白文字を区切りとしてデータを読み取るため、改行文字は読みとられず、入力バッファに残ることになり、予期せぬ動作を引き起こすことがある。そのため、`scanf`の後に入力バッファに残っている改行文字を`getchar`で読み取り、捨てることが一般的である。
-
-下記は`%c`を使って1文字だけ読み取る例である。`%c`は空白文字も読み取るため、改行文字を読み取ることができる。そのため、`a\n`と入力すると、最初に`a`が表示され、次に入力バッファに残っている改行文字が表示される。
-
-```c
-int main() {
-  char input;
-  while (1) {
-    printf("shell> ");
-    scanf("%c", &input);
-    printf("%c\n", input);
-  }
-}
+```bash
+make
 ```
 
-```sh
-shell> a
-a
-shell> 
+サーバーの起動：
 
+```bash
+$ server/server.out
+server starting...
+listening on port 9000
+```
+
+シェル（クライアント）の起動：
+
+```bash
+$ client/shell.out
 shell> 
 ```
 
-[[迷信] scanfではバッファオーバーランを防げない](https://www.kijineko.co.jp/迷信-scanfではバッファオーバーランを防げない/)
+## 使い方
 
-[C言語の標準入力関数をまとめてみた　～①scanf,getchar,gets～](https://ameblo.jp/koshi-8-ginchaku/entry-12252499746.html)
+### クライアント
 
-## `htons`
+サーバーとシェルを起動した後、シェルで下記のように実行するとサーバーにGETリクエストを送ることができる。
 
-"Host TO Network Short" の略で、16ビットの整数（short型）をホストバイトオーダー（通常はリトルエンディアン）をネットワークバイトオーダー（ビッグエンディアン）に変換するための関数である。`htons(PORT)`はポート番号をネットワークバイトオーダーに変換する。
+```bash
+shell> wget 127.0.0.1:9000
 
-## Socketオプション
+HTTP/1.1 200 OK
+Content-Type: text/html
+Connection: close
 
-Closeしたポートは、`TIME_WAIT`状態になり、数分間そのポートを再利用することができない。すぐに再利用してしまうと、以前のコネクションの時に送られてきたパケットが新しいコネクションに届いて、混入する可能性があるためである。そのため、`TIME_WAIT`状態のポートにソケットをバインドしようとすると`Address already in use`というエラーが発生する。
+<html><body><h1>Hello from server</h1></body></html>
 
-`setsockopt`でソケットオプションを設定することができる。ソケットオプションは、ソケットの動作を制御するためのパラメータである。`setsockopt`の第2引数にはオプションのレベルを指定する。`SOL_SOCKET`はソケットレベルのオプションで、`IPPROTO_TCP`はTCPレベルのオプションである。第3引数にはオプション名を指定する。`SO_REUSEADDR`を設定するとソケットを`TIME_WAIT`状態のポートにバインドできるようになる。第4引数にはオプションの値を指定する。第5引数にはオプションの値のサイズを指定する。
 
-ちなみに`SO_REUSEPORT`を設定すると、同じポート番号に複数のソケットをバインドできるようになる。例えば複数のサーバープロセスが同一ポートで待ち受けることで分散処理などが可能になる。
-
-```c
-// Socket Option
-int opt = 1;
-if (setsockopt(ss, SOL_SOCKET, SO_REUSEPORT, &opt, sizeof(opt)) == -1) {
-  perror("setsockopt SO_REUSEPORT failed");
-  close(ss);
-  return 1;
-}
+shell>
 ```
 
-[ソケットプログラミング - 東京大学](https://i1i2i3.eidos.ic.i.u-tokyo.ac.jp/slides/socket.pdf)
+また外部のサイトに対してもリクエストを送ることができる（HTTPのみ、パス指定は未対応）。
 
-[分散にも便利 SO_REUSEPORT](https://chienomi.org/articles/linux/202212-reuseport.htmls)
+```bash
+shell> wget 93.184.215.14:80
 
-[NginxでのeBPFとSO_REUSEPORTを使ったQUICコネクション受信処理](https://medium.com/nttlabs/nginx-quic-ebpf-soreuseport-127c62112a8d)
+HTTP/1.1 404 Not Found
+Content-Type: text/html
+Date: Sun, 29 Sep 2024 09:51:53 GMT
+Server: ECAcc (lac/55D2)
+Content-Length: 345
+Connection: close
 
-## `sin_addr`
+<?xml version="1.0" encoding="iso-8859-1"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+         "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
+        <head>
+                <title>404 - Not Found</title>
+        </head>
+        <body>
+                <h1>404 - Not Found</h1>
+        </body>
+</html>
 
-下記のようにするとサーバーが任意のネットワークインターフェース（すべての利用可能なインターフェース）からの接続を受け入れるという意味になる（具体的には、`0.0.0.0`というアドレスに解決される）。
-
-```c
-addr.sin_addr.s_addr = INADDR_ANY;
+shell> 
 ```
 
-下記のようにすると、ローカルホスト（`127.0.0.1`）からの接続のみを受け入れるという意味になる。
+### サーバー
 
-```c
-if (inet_aton("127.0.0.1", &addr.sin_addr) == 0) {
-  perror("invalid address");
-  close(ss);
-  return -1;
-}
-```
+サーバーはブラウザからもアクセスできる。
+
+![ブラウザ](images/browser.png)
