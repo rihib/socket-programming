@@ -1,12 +1,14 @@
 #include <arpa/inet.h>
 #include <err.h>
 #include <netdb.h>
+#include <pthread.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
 
 #include "send_and_receive.h"
+#include "server.h"
 
 int main() {
   printf("server starting...\n");
@@ -21,7 +23,6 @@ int main() {
   if (error) {
     errx(EXIT_FAILURE, "%s", gai_strerror(error));
   }
-  const int MAXSOCK = 1;
   int sockets[MAXSOCK];
   int nsock = 0;
   const char *cause = NULL;
@@ -31,7 +32,6 @@ int main() {
     sockets[nsock] =
         socket(info->ai_family, info->ai_socktype, info->ai_protocol);
     if (sockets[nsock] == -1) {
-      error = 1;
       cause = "failed to create socket";
       continue;
     }
@@ -72,49 +72,67 @@ int main() {
     // Accept
     struct sockaddr_storage addr;
     socklen_t len = sizeof(addr);
-    int cs = accept(ss, (struct sockaddr *)&addr, &len);
-    if (cs == -1) {
-      close(ss);
-      err(EXIT_FAILURE, "accept failed");
+    int *cs = malloc(sizeof(int));
+    if (!cs) {
+      perror("malloc failed");
+      continue;
+    }
+    *cs = accept(ss, (struct sockaddr *)&addr, &len);
+    if (*cs == -1) {
+      perror("accept failed");
+      free(cs);
+      continue;
     }
 
-    // Receive
-    char buf[1024];
-    int received = receive_all(cs, buf, sizeof(buf) - 1);
-    if (received == -1) {
-      close(cs);
-      close(ss);
-      err(EXIT_FAILURE, "receive faild");
+    // Create thread to handle request
+    pthread_t thread;
+    if (pthread_create(&thread, NULL, handle_request, cs) != 0) {
+      perror("pthread_create failed");
+      close(*cs);
+      free(cs);
+      continue;
     }
-    buf[received] = '\0';
-    printf("\nreceived:\n%s\n", buf);
-
-    // Create HTTP Response
-    char *response =
-        "HTTP/1.1 200 OK\r\n"
-        "Content-Type: text/html\r\n"
-        "Connection: close\r\n"
-        "\r\n"
-        "<html><body><h1>Hello from server</h1></body></html>"
-        "\r\n\r\n";
-
-    // Send HTTP Response
-    if (send_all(cs, response, strlen(response)) == -1) {
-      close(cs);
-      close(ss);
-      err(EXIT_FAILURE, "send failed");
-    }
-    printf("sent http reponse\n");
-
-    // Close client socket
-    close(cs);
-    printf("client connection closed\n");
-    if (error == 1) {
-      break;
-    }
+    pthread_detach(thread);
   }
   // Close server socket
   close(ss);
   printf("server socket closed\n");
   return 0;
+}
+
+void *handle_request(void *arg) {
+  int cs = *(int *)arg;
+  free(arg);
+
+  // Receive
+  char buf[1024];
+  int received = receive_all(cs, buf, sizeof(buf) - 1);
+  if (received == -1) {
+    close(cs);
+    pthread_exit(NULL);
+  }
+  buf[received] = '\0';
+  printf("\nreceived:\n%s\n", buf);
+
+  // Create HTTP Response
+  char *response =
+      "HTTP/1.1 200 OK\r\n"
+      "Content-Type: text/html\r\n"
+      "Connection: close\r\n"
+      "\r\n"
+      "<html><body><h1>Hello from server</h1></body></html>"
+      "\r\n\r\n";
+
+  // Send HTTP Response
+  if (send_all(cs, response, strlen(response)) == -1) {
+    close(cs);
+    pthread_exit(NULL);
+  }
+  printf("sent http reponse\n");
+
+  // Close client socket
+  close(cs);
+  printf("client connection closed\n");
+
+  pthread_exit(NULL);
 }
