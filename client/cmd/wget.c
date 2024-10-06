@@ -58,6 +58,7 @@ int main(int argc, char *argv[]) {
     err(EXIT_FAILURE, "%s", cause);
   }
   freeaddrinfo(infos);
+  cause = NULL;
 
   // Send HTTP GET Request
   char request[1024] = {0};
@@ -82,7 +83,7 @@ int main(int argc, char *argv[]) {
 
 cleanup:
   if (close(s) == -1) {
-    err(EXIT_FAILURE, "failed to close");
+    err(EXIT_FAILURE, "failed to close, cause=%s", cause);
   }
   if (error) {
     err(EXIT_FAILURE, "%s", cause);
