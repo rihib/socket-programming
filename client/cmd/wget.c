@@ -30,7 +30,7 @@ int main(int argc, char *argv[]) {
   const char *hostname = argv[1];
   const char *port = delimiter + 1;
 
-  // Create socket, then Connect
+  // See `man getaddrinfo` Examples
   struct addrinfo hints, *infos;
   memset(&hints, 0, sizeof(hints));
   hints.ai_family = PF_UNSPEC;
@@ -41,17 +41,21 @@ int main(int argc, char *argv[]) {
   }
   int s = -1;
   for (struct addrinfo *info = infos; info; info = info->ai_next) {
+    // Create socket
     s = socket(info->ai_family, info->ai_socktype, info->ai_protocol);
     if (s == -1) {
       cause = "failed to create socket";
       continue;
     }
+
+    // Connect
     if (connect(s, info->ai_addr, info->ai_addrlen) == -1) {
       cause = "failed to connect";
       close(s);
       s = -1;
       continue;
     }
+
     break;
   }
   if (s == -1) {
