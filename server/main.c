@@ -106,13 +106,12 @@ void *handle_request(void *arg) {
   free(arg);
 
   // Receive
-  char buf[1024];
-  int received = receive_all(cs, buf, sizeof(buf) - 1);
+  char *buf = NULL;
+  int received = receive_all(cs, &buf);
   if (received == -1) {
     perror("recv failed");
     goto cleanup;
   }
-  buf[received] = '\0';
   printf("\nreceived:\n%s\n", buf);
 
   // Create HTTP Response
@@ -125,7 +124,7 @@ void *handle_request(void *arg) {
       "\r\n\r\n";
 
   // Send HTTP Response
-  if (send_all(cs, response, strlen(response)) == -1) {
+  if (send_all(cs, response) == -1) {
     perror("send failed");
     goto cleanup;
   }

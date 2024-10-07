@@ -30,54 +30,60 @@ int main(int argc, char *argv[]) {
   if (error) {
     errx(EXIT_FAILURE, "%s", gai_strerror(error));
   }
-  int s = -1;
+  int sockfd = -1;
   for (struct addrinfo *info = infos; info; info = info->ai_next) {
     // Create socket
-    s = socket(info->ai_family, info->ai_socktype, info->ai_protocol);
-    if (s == -1) {
+    sockfd = socket(info->ai_family, info->ai_socktype, info->ai_protocol);
+    if (sockfd == -1) {
       cause = "failed to create socket";
       continue;
     }
 
     // Connect
-    if (connect(s, info->ai_addr, info->ai_addrlen) == -1) {
+    if (connect(sockfd, info->ai_addr, info->ai_addrlen) == -1) {
       cause = "failed to connect";
-      close(s);
-      s = -1;
+      close(sockfd);
+      sockfd = -1;
       continue;
     }
 
     break;
   }
-  if (s == -1) {
+  if (sockfd == -1) {
     err(EXIT_FAILURE, "%s", cause);
   }
   freeaddrinfo(infos);
   cause = NULL;
 
   // Send HTTP GET Request
-  char request[1024] = {0};
-  snprintf(request, sizeof(request),
-           "GET / HTTP/1.1\r\nHost: %s\r\nConnection: close\r\n\r\n", hostname);
-  if (send_all(s, request, strlen(request)) == -1) {
+  const char *request_format =
+      "GET / HTTP/1.1\r\nHost: %s\r\nConnection: close\r\n\r\n";
+  int request_size = snprintf(NULL, 0, request_format, hostname) + 1;
+  char *request = malloc(request_size);
+  if (request == NULL) {
+    error = EXIT_FAILURE;
+    cause = "failed to allocate request";
+    goto cleanup;
+  }
+  snprintf(request, request_size, request_format, hostname);
+  if (send_all(sockfd, request) == -1) {
     error = EXIT_FAILURE;
     cause = "failed to send";
     goto cleanup;
   }
 
   // Receive HTTP Response
-  char buf[1024];
-  int received = receive_all(s, buf, sizeof(buf) - 1);
+  char *buf = NULL;
+  int received = receive_all(sockfd, &buf);
   if (received == -1) {
     error = EXIT_FAILURE;
     cause = "failed to receive";
     goto cleanup;
   }
-  buf[received] = '\0';
   printf("\n%s\n", buf);
 
 cleanup:
-  if (close(s) == -1) {
+  if (close(sockfd) == -1) {
     err(EXIT_FAILURE, "failed to close");
   }
   if (error) {
