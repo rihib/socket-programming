@@ -41,7 +41,7 @@ shell>
 サーバーとシェルを起動した後、シェルで下記のように実行するとサーバーにGETリクエストを送ることができる。
 
 ```bash
-shell> wget localhost:80
+shell> wget localhost
 
 HTTP/1.1 200 OK
 Content-Type: text/html
@@ -56,7 +56,7 @@ shell>
 また外部のサイトに対してもリクエストを送ることができる（HTTPのみ、パス指定は未対応）。
 
 ```bash
-shell> wget www.google.com:80
+shell> wget www.google.com
 
 HTTP/1.1 200 OK
 Date: Sun, 06 Oct 2024 02:21:04 GMT
