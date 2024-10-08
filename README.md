@@ -6,10 +6,6 @@
 
 C言語でソケットプログラミングを行った。クライアント・サーバー間はTCPで通信している。シェル、`wget`コマンド、HTTPサーバーを実装しており、簡単にだが、HTTPを喋ることができる。
 
-### Future Work
-
-- [ ] サーバーが特定のシグナルを受け取ったら停止するようにする
-
 ## 環境構築
 
 コンパイル：
@@ -79,3 +75,14 @@ shell>
 サーバーはブラウザからもアクセスできる。
 
 ![ブラウザ](images/browser.png)
+
+`Ctrl + C`でサーバーを停止できる。
+
+```bash
+% make runs
+server starting...
+listening on port 80
+^Caccept failed: Interrupted system call
+shutting down server...
+server stopped.
+```
