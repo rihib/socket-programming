@@ -2,6 +2,7 @@
 #include <err.h>
 #include <netdb.h>
 #include <pthread.h>
+#include <signal.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -10,7 +11,20 @@
 #include "send_and_receive.h"
 #include "server.h"
 
+volatile sig_atomic_t stop_server = 0;
+
 int main() {
+  struct sigaction sa;
+  memset(&sa, 0, sizeof(sa));
+  sa.sa_handler = sigint_handler;
+  sigemptyset(&sa.sa_mask);
+  sa.sa_flags = 0;
+
+  if (sigaction(SIGINT, &sa, NULL) == -1) {
+    perror("sigaction failed");
+    return EXIT_FAILURE;
+  }
+
   printf("server starting...\n");
   const char *cause = NULL;
 
@@ -65,12 +79,12 @@ int main() {
   freeaddrinfo(infos);
   printf("listening on port 80\n");
 
-  while (1) {
+  while (stop_server == 0) {
     // Accept
     struct sockaddr_storage addr;
     socklen_t len = sizeof(addr);
     int *cs = malloc(sizeof(int));
-    if (!cs) {
+    if (cs == NULL) {
       perror("malloc failed");
       continue;
     }
@@ -92,17 +106,22 @@ int main() {
     pthread_detach(thread);
   }
 
-// この部分が実行されるのはエラーが起きた場合のみ
-// （シグナルを使っていないので、Ctrl+Cでループの実行を中断したらこの部分は実行されないため）
 cleanup:
+  printf("shutting down server...\n");
+  freeaddrinfo(infos);
   for (int i = 0; i < nsock; i++) {
     if (close(i) == -1) {
       err(EXIT_FAILURE, "failed to close");
     }
   }
-  freeaddrinfo(infos);
-  err(EXIT_FAILURE, "server socket closed: cause=%s", cause);
+  if (cause != NULL) {
+    err(EXIT_FAILURE, "server socket closed: cause=%s", cause);
+  }
+  printf("server stopped.\n");
+  return 0;
 }
+
+void sigint_handler() { stop_server = 1; }
 
 void *handle_request(void *arg) {
   int cs = *(int *)arg;
