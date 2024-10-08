@@ -95,9 +95,12 @@ int main() {
 // この部分が実行されるのはエラーが起きた場合のみ
 // （シグナルを使っていないので、Ctrl+Cでループの実行を中断したらこの部分は実行されないため）
 cleanup:
-  if (close(ss) == -1) {
-    err(EXIT_FAILURE, "failed to close");
+  for (int i = 0; i < nsock; i++) {
+    if (close(i) == -1) {
+      err(EXIT_FAILURE, "failed to close");
+    }
   }
+  freeaddrinfo(infos);
   err(EXIT_FAILURE, "server socket closed: cause=%s", cause);
 }
 
