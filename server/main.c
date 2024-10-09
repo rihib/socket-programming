@@ -11,7 +11,7 @@
 #include "send_and_receive.h"
 #include "server.h"
 
-volatile sig_atomic_t stop_server = 0;
+volatile sig_atomic_t interrupted = 0;
 
 int main() {
   struct sigaction sa;
@@ -79,7 +79,7 @@ int main() {
   freeaddrinfo(infos);
   printf("listening on port 80\n");
 
-  while (stop_server == 0) {
+  while (interrupted == 0) {
     // Accept
     struct sockaddr_storage addr;
     socklen_t len = sizeof(addr);
@@ -121,7 +121,7 @@ cleanup:
   return 0;
 }
 
-void sigint_handler() { stop_server = 1; }
+void sigint_handler() { interrupted = 1; }
 
 void *handle_request(void *arg) {
   int cs = *(int *)arg;
